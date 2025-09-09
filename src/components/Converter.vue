@@ -1,7 +1,13 @@
 <template>
   <a-card title="Vietcombank Exchange Converter">
     <div style="display: flex; gap: 12px; flex-wrap: wrap">
-      <a-input-number v-model:value="amount" :min="0" style="width: 150px" />
+      <a-input-number
+        v-model:value="amount"
+        :min="0"
+        style="width: 150px"
+        :formatter="formatVND"
+        :parser="parseVND"
+      />
 
       <a-select v-model:value="from" style="width: 120px">
         <a-select-option v-for="c in currencies" :key="c" :value="c">{{
@@ -61,7 +67,7 @@
 
 <script lang="ts" setup>
 import { ref, computed, onMounted } from "vue";
-import { fetchVcbRates } from "../services/vcbService";
+import { fetchVcbRates, formatVND, parseVND } from "../services/vcbService";
 
 interface RateRow {
   code: string;
@@ -89,19 +95,19 @@ const columns = [
     title: "Buy",
     dataIndex: "buy",
     key: "buy",
-    customRender: (v: any) => v ?? "-",
+    customRender: ({ text }: { text: number | null }) => formatVND(text) ?? "-",
   },
   {
     title: "Transfer",
     dataIndex: "transfer",
     key: "transfer",
-    customRender: (v: any) => v ?? "-",
+    customRender: ({ text }: { text: number | null }) => formatVND(text) ?? "-",
   },
   {
     title: "Sell",
     dataIndex: "sell",
     key: "sell",
-    customRender: (v: any) => v ?? "-",
+    customRender: ({ text }: { text: number | null }) => formatVND(text) ?? "-",
   },
 ];
 
@@ -163,14 +169,16 @@ function convert() {
       return;
     }
     result.value = Number((Number(amount.value) / toRate).toFixed(4));
-    usedRateText.value = `${mode}: 1 ${to.value} = ${toRate} VND`;
+    usedRateText.value = `${mode}: 1 ${to.value} = ${formatVND(toRate)} VND`;
   } else if (to.value === "VND") {
     if (!fromRate) {
       usedRateText.value = "Không có tỉ giá cho tiền nguồn";
       return;
     }
     result.value = Number((Number(amount.value) * fromRate).toFixed(2));
-    usedRateText.value = `${mode}: 1 ${from.value} = ${fromRate} VND`;
+    usedRateText.value = `${mode}: 1 ${from.value} = ${formatVND(
+      fromRate
+    )} VND`;
   } else {
     if (!fromRate || !toRate) {
       usedRateText.value = "Thiếu tỉ giá";
@@ -178,7 +186,9 @@ function convert() {
     }
     const vnd = Number(amount.value) * fromRate;
     result.value = Number((vnd / toRate).toFixed(4));
-    usedRateText.value = `${mode}: 1 ${from.value} = ${fromRate} VND; 1 ${to.value} = ${toRate} VND`;
+    usedRateText.value = `${mode}: 1 ${from.value} = ${formatVND(
+      fromRate
+    )} VND; 1 ${to.value} = ${formatVND(toRate)} VND`;
   }
 }
 
@@ -193,6 +203,6 @@ onMounted(() => {
 const currencies = computed(() => rates.value.map((r) => r.code));
 const lastUpdatedText = computed(() => lastUpdated.value ?? "Chưa có dữ liệu");
 const formattedResult = computed(() =>
-  result.value === null ? "-" : String(result.value)
+  result.value === null ? "-" : formatVND(result.value)
 );
 </script>

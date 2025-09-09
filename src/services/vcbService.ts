@@ -19,6 +19,24 @@ export function parseNumberSafe(v: any): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+export function formatVND(value: number | null): string | null {
+  if (value === null || !Number.isFinite(value)) return null;
+  return new Intl.NumberFormat("vi-VN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 4,
+  })
+    .format(value)
+    .replace(/,/g, ".")
+    .replace(/\./g, ",");
+}
+
+export function parseVND(value: string | null): number | null {
+  if (!value) return null;
+  const cleaned = value.replace(/\./g, "").replace(/,/g, ".");
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : null;
+}
+
 function normalizeItem(item: any): VcbRate {
   return {
     code: String(item.code || ""),
