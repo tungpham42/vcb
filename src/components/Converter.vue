@@ -5,7 +5,6 @@
         v-model:value="amount"
         :min="0"
         style="width: 150px"
-        :formatter="formatNumber"
         :parser="parseNumberSafe"
       />
       <a-select v-model:value="from" style="width: 120px">
@@ -64,7 +63,6 @@
 import { ref, computed, onMounted } from "vue";
 import {
   fetchVcbRates,
-  formatNumber,
   parseNumberSafe,
   type VcbRate,
 } from "../services/vcbService";
@@ -88,21 +86,21 @@ const columns = [
     dataIndex: "buy",
     key: "buy",
     customRender: ({ text }: { text: number | null }) =>
-      formatNumber(text) ?? "-",
+      parseNumberSafe(text) ?? "-",
   },
   {
     title: "Transfer",
     dataIndex: "transfer",
     key: "transfer",
     customRender: ({ text }: { text: number | null }) =>
-      formatNumber(text) ?? "-",
+      parseNumberSafe(text) ?? "-",
   },
   {
     title: "Sell",
     dataIndex: "sell",
     key: "sell",
     customRender: ({ text }: { text: number | null }) =>
-      formatNumber(text) ?? "-",
+      parseNumberSafe(text) ?? "-",
   },
 ];
 
@@ -152,7 +150,7 @@ function convert() {
       return;
     }
     result.value = Number((amount.value / toValue).toFixed(4));
-    usedRateText.value = `1 ${to.value} = ${formatNumber(toValue)} VND (${
+    usedRateText.value = `1 ${to.value} = ${parseNumberSafe(toValue)} VND (${
       rateMode.value
     })`;
   } else if (to.value === "VND") {
@@ -161,9 +159,9 @@ function convert() {
       return;
     }
     result.value = Number((amount.value * fromValue).toFixed(2));
-    usedRateText.value = `1 ${from.value} = ${formatNumber(fromValue)} VND (${
-      rateMode.value
-    })`;
+    usedRateText.value = `1 ${from.value} = ${parseNumberSafe(
+      fromValue
+    )} VND (${rateMode.value})`;
   } else {
     if (fromValue === null || toValue === null) {
       usedRateText.value = `Thiếu tỉ giá ${rateMode.value} cho ${
@@ -173,9 +171,11 @@ function convert() {
     }
     const vnd = amount.value * fromValue;
     result.value = Number((vnd / toValue).toFixed(4));
-    usedRateText.value = `1 ${from.value} = ${formatNumber(fromValue)} VND; 1 ${
-      to.value
-    } = ${formatNumber(toValue)} VND (${rateMode.value})`;
+    usedRateText.value = `1 ${from.value} = ${parseNumberSafe(
+      fromValue
+    )} VND; 1 ${to.value} = ${parseNumberSafe(toValue)} VND (${
+      rateMode.value
+    })`;
   }
 }
 
@@ -190,6 +190,6 @@ onMounted(() => {
 const currencies = computed(() => rates.value.map((r) => r.code));
 const lastUpdatedText = computed(() => lastUpdated.value ?? "Chưa có dữ liệu");
 const formattedResult = computed(() =>
-  result.value === null ? "-" : formatNumber(result.value)
+  result.value === null ? "-" : parseNumberSafe(result.value)
 );
 </script>
