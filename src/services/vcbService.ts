@@ -17,14 +17,14 @@ export function parseNumberSafe(value: any): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-export function formatNumber(value: string | number | null): string | null {
+export function formatNumber(
+  value: string | number | null
+): string | number | null {
   if (value === null || value === undefined || value === "") return null;
   const num = parseFloat(String(value).replace(/\./g, "").replace(",", "."));
 
   // Format with grouping (dot) + decimal comma
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-  }).format(num);
+  return num;
 }
 
 function normalizeItem(item: any): VcbRate {
