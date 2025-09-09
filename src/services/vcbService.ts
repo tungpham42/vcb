@@ -10,7 +10,7 @@ export interface VcbRate {
 
 const VCB_JSON_URL = "/.netlify/functions/vcb";
 
-function parseNumberSafe(v: any): number | null {
+export function parseNumberSafe(v: any): number | null {
   if (v === null || v === undefined) return null;
   if (typeof v === "number") return Number.isFinite(v) ? v : null;
   const s = String(v).trim();

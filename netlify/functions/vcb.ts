@@ -1,5 +1,6 @@
 import axios from "axios";
 import * as xml2js from "xml2js";
+import { parseNumberSafe } from "../../src/services/vcbService";
 
 export const handler = async () => {
   try {
@@ -14,9 +15,9 @@ export const handler = async () => {
     const rates = result.ExrateList.Exrate.map((item: any) => ({
       code: item.$.CurrencyCode,
       name: item.$.CurrencyName,
-      buy: parseFloat(item.$.Buy),
-      transfer: parseFloat(item.$.Transfer),
-      sell: parseFloat(item.$.Sell),
+      buy: parseNumberSafe(item.$.Buy),
+      transfer: parseNumberSafe(item.$.Transfer),
+      sell: parseNumberSafe(item.$.Sell),
     }));
 
     // Add VND explicitly
