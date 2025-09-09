@@ -17,25 +17,32 @@ export function parseNumberSafe(value: any): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-export function formatNumber(value: string | number | null): number | null {
+export function formatNumber(value: string | number | null): string | null {
   if (value === null || value === undefined) return null;
 
   let num: number;
 
   if (typeof value === "string") {
-    // Remove commas and trim whitespace
-    const cleaned = value.replace(/,/g, "").trim();
-    // Check if the cleaned string is empty or not a valid number
+    let cleaned = value.trim();
+
+    // Case 1: EU style with comma as decimal (e.g. "16.969,78")
+    if (/,\d{1,2}$/.test(cleaned)) {
+      cleaned = cleaned.replace(/\./g, "").replace(",", ".");
+    }
+    // Case 2: US style with dot as decimal (e.g. "16,969.78")
+    else {
+      cleaned = cleaned.replace(/,/g, "");
+    }
+
     if (cleaned === "" || isNaN(Number(cleaned))) return null;
-    // Convert to float
-    num = parseFloat(cleaned);
+    num = Number(cleaned);
   } else {
-    // Check if the input number is finite
     if (!Number.isFinite(value)) return null;
     num = value;
   }
 
-  return num;
+  // Always 2 decimals, use comma as separator, no thousand grouping
+  return num.toFixed(2).replace(".", ",");
 }
 
 function normalizeItem(item: any): VcbRate {
