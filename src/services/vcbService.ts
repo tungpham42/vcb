@@ -10,31 +10,19 @@ export interface VcbRate {
 
 const VCB_JSON_URL = "/.netlify/functions/vcb";
 
-export function parseNumberSafe(v: any): number | null {
-  if (v === null || v === undefined) return null;
-  if (typeof v === "number") return Number.isFinite(v) ? v : null;
-  const s = String(v).trim();
-  if (!s) return null;
-  const n = Number(s.replace(/\./g, "").replace(/,/g, "."));
-  return Number.isFinite(n) ? n : null;
+export function parseNumberSafe(value: any): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const cleaned = String(value).trim().replace(/\./g, "").replace(/,/g, ".");
+  const parsed = Number(cleaned);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
-export function formatVND(value: number | null): string | null {
+export function formatNumber(value: number | null): string | null {
   if (value === null || !Number.isFinite(value)) return null;
   return new Intl.NumberFormat("vi-VN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 4,
-  })
-    .format(value)
-    .replace(/,/g, ".")
-    .replace(/\./g, ",");
-}
-
-export function parseVND(value: string | null): number | null {
-  if (!value) return null;
-  const cleaned = value.replace(/\./g, "").replace(/,/g, ".");
-  const n = Number(cleaned);
-  return Number.isFinite(n) ? n : null;
+  }).format(value);
 }
 
 function normalizeItem(item: any): VcbRate {
