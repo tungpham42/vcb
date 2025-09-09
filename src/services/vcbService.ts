@@ -17,6 +17,13 @@ export function parseNumberSafe(value: any): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+export function parseNumberSafeVN(value: any): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const cleaned = String(value).trim().replace(/,/g, "").replace(/\./g, ",");
+  const parsed = Number(cleaned);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function normalizeItem(item: any): VcbRate {
   return {
     code: String(item.code || ""),
