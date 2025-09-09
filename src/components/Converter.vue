@@ -87,19 +87,46 @@ const columns = [
     title: "Buy",
     dataIndex: "buy",
     key: "buy",
-    customRender: (v: any) => v ?? "-",
+    customRender: (v: any) =>
+      v !== null
+        ? v
+            .toLocaleString("vi-VN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
+            .replace(/,/g, ".")
+            .replace(/\./g, ",")
+        : "-",
   },
   {
     title: "Transfer",
     dataIndex: "transfer",
     key: "transfer",
-    customRender: (v: any) => v ?? "-",
+    customRender: (v: any) =>
+      v !== null
+        ? v
+            .toLocaleString("vi-VN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
+            .replace(/,/g, ".")
+            .replace(/\./g, ",")
+        : "-",
   },
   {
     title: "Sell",
     dataIndex: "sell",
     key: "sell",
-    customRender: (v: any) => v ?? "-",
+    customRender: (v: any) =>
+      v !== null
+        ? v
+            .toLocaleString("vi-VN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
+            .replace(/,/g, ".")
+            .replace(/\./g, ",")
+        : "-",
   },
 ];
 
@@ -154,23 +181,47 @@ function convert() {
     return;
   }
 
+  let resultValue: number;
+  let rateText: string;
+
   if (from.value === "VND") {
-    result.value = Number((Number(amount.value) / Number(toRate)).toFixed(2));
-    usedRateText.value = `${mode}: 1 ${to.value} = ${toRate.toLocaleString(
-      "vi-VN"
-    )} VND`;
+    resultValue = Number((Number(amount.value) / Number(toRate)).toFixed(2));
+    rateText = `${mode}: 1 ${to.value} = ${toRate
+      .toLocaleString("vi-VN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+      .replace(/,/g, ".")
+      .replace(/\./g, ",")} VND`;
   } else if (to.value === "VND") {
-    result.value = Number((Number(amount.value) * Number(fromRate)).toFixed(2));
-    usedRateText.value = `${mode}: 1 ${from.value} = ${fromRate.toLocaleString(
-      "vi-VN"
-    )} VND`;
+    resultValue = Number((Number(amount.value) * Number(fromRate)).toFixed(2));
+    rateText = `${mode}: 1 ${from.value} = ${fromRate
+      .toLocaleString("vi-VN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+      .replace(/,/g, ".")
+      .replace(/\./g, ",")} VND`;
   } else {
     const vnd = Number(amount.value) * Number(fromRate);
-    result.value = Number((vnd / Number(toRate)).toFixed(2));
-    usedRateText.value = `${mode}: 1 ${from.value} = ${fromRate.toLocaleString(
-      "vi-VN"
-    )} VND; 1 ${to.value} = ${toRate.toLocaleString("vi-VN")} VND`;
+    resultValue = Number((vnd / Number(toRate)).toFixed(2));
+    rateText = `${mode}: 1 ${from.value} = ${fromRate
+      .toLocaleString("vi-VN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+      .replace(/,/g, ".")
+      .replace(/\./g, ",")} VND; 1 ${to.value} = ${toRate
+      .toLocaleString("vi-VN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+      .replace(/,/g, ".")
+      .replace(/\./g, ",")} VND`;
   }
+
+  result.value = resultValue;
+  usedRateText.value = rateText;
 }
 
 function reload() {
@@ -186,9 +237,12 @@ const lastUpdatedText = computed(() => lastUpdated.value ?? "Chưa có dữ li�
 const formattedResult = computed(() =>
   result.value === null
     ? "-"
-    : result.value.toLocaleString("vi-VN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })
+    : result.value
+        .toLocaleString("vi-VN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+        .replace(/,/g, ".")
+        .replace(/\./g, ",")
 );
 </script>
