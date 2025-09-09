@@ -17,12 +17,23 @@ export function parseNumberSafe(value: any): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-export function formatNumber(value: number | null): string | null {
-  if (value === null || !Number.isFinite(value)) return null;
+export function formatNumber(value: string | number | null): string | null {
+  if (value === null) return null;
+
+  // Convert string like "24,700.00" to number
+  let num: number;
+  if (typeof value === "string") {
+    num = parseFloat(value.replace(/,/g, ""));
+  } else {
+    num = value;
+  }
+
+  if (!Number.isFinite(num)) return null;
+
   return new Intl.NumberFormat("vi-VN", {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 4,
-  }).format(value);
+    maximumFractionDigits: 2, // Rates usually 2 decimals
+  }).format(num);
 }
 
 function normalizeItem(item: any): VcbRate {
