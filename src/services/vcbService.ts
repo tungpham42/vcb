@@ -23,17 +23,7 @@ export function formatNumber(value: string | number | null): string | null {
   let num: number;
 
   if (typeof value === "string") {
-    let cleaned = value.trim();
-
-    // Case 1: EU style with comma as decimal (e.g. "16.969,78")
-    if (/,\d{1,2}$/.test(cleaned)) {
-      cleaned = cleaned.replace(/\./g, "").replace(",", ".");
-    }
-    // Case 2: US style with dot as decimal (e.g. "16,969.78")
-    else {
-      cleaned = cleaned.replace(/,/g, "");
-    }
-
+    const cleaned = value.replace(/,/g, "").trim(); // remove commas
     if (cleaned === "" || isNaN(Number(cleaned))) return null;
     num = Number(cleaned);
   } else {
@@ -41,7 +31,7 @@ export function formatNumber(value: string | number | null): string | null {
     num = value;
   }
 
-  // Always 2 decimals, use comma as separator, no thousand grouping
+  // Format: no thousand separators, always 2 decimals, decimal separator is comma
   return num.toFixed(2).replace(".", ",");
 }
 
