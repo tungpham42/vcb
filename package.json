@@ -17,7 +17,8 @@
     "@netlify/functions": "^4.2.5",
     "ant-design-vue": "^4.2.6",
     "axios": "^1.11.0",
-    "vue": "^3.5.18"
+    "vue": "^3.5.18",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.2",

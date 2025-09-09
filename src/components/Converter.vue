@@ -2,21 +2,17 @@
   <a-card title="Vietcombank Exchange Converter">
     <div style="display: flex; gap: 12px; flex-wrap: wrap">
       <a-input-number v-model:value="amount" :min="0" style="width: 150px" />
-
       <a-select v-model:value="from" style="width: 120px">
         <a-select-option v-for="c in currencies" :key="c" :value="c">{{
           c
         }}</a-select-option>
       </a-select>
-
       <span style="align-self: center">→</span>
-
       <a-select v-model:value="to" style="width: 120px">
         <a-select-option v-for="c in currencies" :key="c" :value="c">{{
           c
         }}</a-select-option>
       </a-select>
-
       <a-select v-model:value="rateMode" style="width: 160px">
         <a-select-option value="Transfer"
           >Tỉ giá (Chuyển khoản)</a-select-option
@@ -24,7 +20,6 @@
         <a-select-option value="Buy">Mua vào</a-select-option>
         <a-select-option value="Sell">Bán ra</a-select-option>
       </a-select>
-
       <a-button type="primary" @click="convert">Chuyển</a-button>
       <a-button @click="reload">Tải lại</a-button>
     </div>
@@ -34,6 +29,9 @@
         <div v-if="result !== null">
           <h3>Kết quả: {{ formattedResult }}</h3>
           <p>Rate used: {{ usedRateText }}</p>
+        </div>
+        <div v-else-if="error">
+          <p style="color: red">{{ error }}</p>
         </div>
         <div v-else>
           <p>Nhập giá trị và chọn tiền tệ rồi nhấn Chuyển.</p>
@@ -52,85 +50,93 @@
         <a-table
           :columns="columns"
           :data-source="rates"
-          :row-key="(record: { Currency: any; }) => record.Currency"
+          :row-key="(record: RateRow) => record.code"
         />
       </a-space>
     </div>
   </a-card>
 </template>
+
 <script lang="ts" setup>
 import { ref, computed, onMounted } from "vue";
-import { fetchVcbRates } from "../services/vcb";
+import { fetchVcbRates } from "../services/vcbService";
 
 interface RateRow {
-  Currency: string;
-  Buy: number | null;
-  Transfer: number | null;
-  Sell: number | null;
+  code: string;
+  name: string;
+  buy: number | null;
+  transfer: number | null;
+  sell: number | null;
 }
 
 const amount = ref<number | null>(1);
 const from = ref("VND");
 const to = ref("USD");
 const rateMode = ref<"Transfer" | "Buy" | "Sell">("Transfer");
-
 const rates = ref<RateRow[]>([]);
 const loading = ref(false);
+const error = ref<string | null>(null);
 const lastUpdated: { value: string | null } = { value: null };
 const result = ref<number | null>(null);
 const usedRateText = ref<string>("");
 
 const columns = [
-  { title: "Currency", dataIndex: "Currency", key: "Currency" },
+  { title: "Currency", dataIndex: "code", key: "code" },
+  { title: "Name", dataIndex: "name", key: "name" },
   {
     title: "Buy",
-    dataIndex: "Buy",
-    key: "Buy",
+    dataIndex: "buy",
+    key: "buy",
     customRender: (v: any) => v ?? "-",
   },
   {
     title: "Transfer",
-    dataIndex: "Transfer",
-    key: "Transfer",
+    dataIndex: "transfer",
+    key: "transfer",
     customRender: (v: any) => v ?? "-",
   },
   {
     title: "Sell",
-    dataIndex: "Sell",
-    key: "Sell",
+    dataIndex: "sell",
+    key: "sell",
     customRender: (v: any) => v ?? "-",
   },
 ];
 
 async function loadRates() {
   loading.value = true;
+  error.value = null;
   try {
-    const raw = await fetchVcbRates();
-    rates.value = raw;
+    const raw: any = await fetchVcbRates();
+    const arr = Array.isArray(raw) ? raw : [];
+    rates.value = arr.map((r: any) => ({
+      code: r.code ?? "",
+      name: r.name ?? "",
+      buy: r.buy ?? null,
+      transfer: r.transfer ?? null,
+      sell: r.sell ?? null,
+    }));
     lastUpdated.value = new Date().toLocaleString();
-    // ensure currencies include VND
-    if (!rates.value.find((r) => r.Currency === "VND")) {
-      rates.value.push({ Currency: "VND", Buy: 1, Transfer: 1, Sell: 1 });
-    }
   } catch (e) {
     console.error(e);
-    // silent
+    error.value = "Không thể tải tỉ giá. Vui lòng thử lại sau.";
   } finally {
     loading.value = false;
   }
 }
 
 function findRate(currency: string): RateRow | undefined {
-  return rates.value.find((r) => r.Currency === currency);
+  return rates.value.find((r) => r.code === currency);
 }
 
 function convert() {
   result.value = null;
   usedRateText.value = "";
-  if (!amount.value || !from.value || !to.value) return;
+  if (!amount.value || !from.value || !to.value) {
+    usedRateText.value = "Vui lòng nhập đầy đủ thông tin.";
+    return;
+  }
 
-  // convert any currency -> VND -> target
-  // assume VND has rate 1
   const fromR = findRate(from.value);
   const toR = findRate(to.value);
 
@@ -140,35 +146,30 @@ function convert() {
   }
 
   const mode = rateMode.value;
-  const fromRate = (fromR as any)[mode];
-  const toRate = (toR as any)[mode];
+  const fromRate = fromR[mode.toLowerCase() as keyof RateRow];
+  const toRate = toR[mode.toLowerCase() as keyof RateRow];
 
-  // If converting from VND -> other: amount / toRate
-  // If converting other -> VND: amount * fromRate
-  // If other -> other: (amount * fromRate) / toRate
+  if (fromRate === null || toRate === null) {
+    usedRateText.value = `Không có tỉ giá ${mode} cho ${from.value} hoặc ${to.value}`;
+    return;
+  }
 
   if (from.value === "VND") {
-    if (!toRate) {
-      usedRateText.value = "Không có tỉ giá cho tiền đích";
-      return;
-    }
-    result.value = Number((Number(amount.value) / toRate).toFixed(4));
-    usedRateText.value = `${mode}: 1 ${to.value} = ${toRate} VND`;
+    result.value = Number((Number(amount.value) / Number(toRate)).toFixed(2));
+    usedRateText.value = `${mode}: 1 ${to.value} = ${toRate.toLocaleString(
+      "vi-VN"
+    )} VND`;
   } else if (to.value === "VND") {
-    if (!fromRate) {
-      usedRateText.value = "Không có tỉ giá cho tiền nguồn";
-      return;
-    }
-    result.value = Number((Number(amount.value) * fromRate).toFixed(2));
-    usedRateText.value = `${mode}: 1 ${from.value} = ${fromRate} VND`;
+    result.value = Number((Number(amount.value) * Number(fromRate)).toFixed(2));
+    usedRateText.value = `${mode}: 1 ${from.value} = ${fromRate.toLocaleString(
+      "vi-VN"
+    )} VND`;
   } else {
-    if (!fromRate || !toRate) {
-      usedRateText.value = "Thiếu tỉ giá";
-      return;
-    }
-    const vnd = Number(amount.value) * fromRate;
-    result.value = Number((vnd / toRate).toFixed(4));
-    usedRateText.value = `${mode}: 1 ${from.value} = ${fromRate} VND; 1 ${to.value} = ${toRate} VND`;
+    const vnd = Number(amount.value) * Number(fromRate);
+    result.value = Number((vnd / Number(toRate)).toFixed(2));
+    usedRateText.value = `${mode}: 1 ${from.value} = ${fromRate.toLocaleString(
+      "vi-VN"
+    )} VND; 1 ${to.value} = ${toRate.toLocaleString("vi-VN")} VND`;
   }
 }
 
@@ -180,9 +181,14 @@ onMounted(() => {
   loadRates();
 });
 
-const currencies = computed(() => rates.value.map((r) => r.Currency));
+const currencies = computed(() => rates.value.map((r) => r.code));
 const lastUpdatedText = computed(() => lastUpdated.value ?? "Chưa có dữ liệu");
 const formattedResult = computed(() =>
-  result.value === null ? "-" : String(result.value)
+  result.value === null
+    ? "-"
+    : result.value.toLocaleString("vi-VN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
 );
 </script>

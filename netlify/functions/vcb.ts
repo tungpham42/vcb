@@ -1,24 +1,41 @@
-import type { Handler } from "@netlify/functions";
 import axios from "axios";
+import * as xml2js from "xml2js";
 
-const VCB_URL =
-  "https://portal.vietcombank.com.vn/Usercontrols/TVPortal.TyGia/pXML.aspx?b=10";
-
-export const handler: Handler = async () => {
+export const handler = async () => {
   try {
-    const response = await axios.get(VCB_URL, { responseType: "text" });
+    const url =
+      "https://portal.vietcombank.com.vn/Usercontrols/TVPortal.TyGia/pXML.aspx?b=10";
+
+    const response = await axios.get(url);
+    const result = await xml2js.parseStringPromise(response.data, {
+      explicitArray: false,
+    });
+
+    const rates = result.ExrateList.Exrate.map((item: any) => ({
+      code: item.$.CurrencyCode,
+      name: item.$.CurrencyName,
+      buy: parseFloat(item.$.Buy),
+      transfer: parseFloat(item.$.Transfer),
+      sell: parseFloat(item.$.Sell),
+    }));
+
+    // Add VND explicitly
+    rates.push({
+      code: "VND",
+      name: "Vietnam Dong",
+      buy: 1,
+      transfer: 1,
+      sell: 1,
+    });
+
     return {
       statusCode: 200,
-      headers: {
-        "Content-Type": "application/xml",
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: response.data,
+      body: JSON.stringify(rates),
     };
   } catch (error) {
     return {
       statusCode: 500,
-      body: "Error fetching data",
+      body: JSON.stringify({ error: error.toString() }),
     };
   }
 };
