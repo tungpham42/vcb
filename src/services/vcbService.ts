@@ -28,9 +28,9 @@ function normalizeItem(item: any): VcbRate {
   return {
     code: String(item.code || ""),
     name: String(item.name || ""),
-    buy: parseNumberSafe(item.buy),
-    transfer: parseNumberSafe(item.transfer),
-    sell: parseNumberSafe(item.sell),
+    buy: parseNumberSafeVN(item.buy),
+    transfer: parseNumberSafeVN(item.transfer),
+    sell: parseNumberSafeVN(item.sell),
   };
 }
 
