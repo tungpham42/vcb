@@ -17,10 +17,13 @@ export function parseNumberSafe(value: any): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-export function formatNumber(value: string | number | null): string | null {
+export function formatNumber(
+  value: string | number | null,
+  currency: string = "USD" // default currency, you can pass "VND", "EUR", etc.
+): string | null {
   if (value === null) return null;
 
-  // Convert string like "24,700.00" to number
+  // Convert string like "24,700.00" → 24700
   let num: number;
   if (typeof value === "string") {
     num = parseFloat(value.replace(/,/g, ""));
@@ -30,9 +33,11 @@ export function formatNumber(value: string | number | null): string | null {
 
   if (!Number.isFinite(num)) return null;
 
-  return new Intl.NumberFormat("vi-VN", {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2, // Rates usually 2 decimals
+    maximumFractionDigits: 2,
   }).format(num);
 }
 
