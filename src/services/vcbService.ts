@@ -17,24 +17,25 @@ export function parseNumberSafe(value: any): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-export function formatNumber(value: string | number | null): string | null {
+export function formatNumber(value: string | number | null): number | null {
   if (value === null || value === undefined) return null;
 
   let num: number;
 
   if (typeof value === "string") {
+    // Remove commas and trim whitespace
     const cleaned = value.replace(/,/g, "").trim();
+    // Check if the cleaned string is empty or not a valid number
     if (cleaned === "" || isNaN(Number(cleaned))) return null;
-    num = Number(cleaned);
+    // Convert to float
+    num = parseFloat(cleaned);
   } else {
+    // Check if the input number is finite
     if (!Number.isFinite(value)) return null;
     num = value;
   }
 
-  return new Intl.NumberFormat("vi-VN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2, // always 2 decimals
-  }).format(num);
+  return num;
 }
 
 function normalizeItem(item: any): VcbRate {
