@@ -17,27 +17,23 @@ export function parseNumberSafe(value: any): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-export function formatNumber(
-  value: string | number | null,
-  currency: string = "USD" // default currency, you can pass "VND", "EUR", etc.
-): string | null {
-  if (value === null) return null;
+export function formatNumber(value: string | number | null): string | null {
+  if (value === null || value === undefined) return null;
 
-  // Convert string like "24,700.00" → 24700
   let num: number;
+
   if (typeof value === "string") {
-    num = parseFloat(value.replace(/,/g, ""));
+    const cleaned = value.replace(/,/g, "").trim();
+    if (cleaned === "" || isNaN(Number(cleaned))) return null;
+    num = Number(cleaned);
   } else {
+    if (!Number.isFinite(value)) return null;
     num = value;
   }
 
-  if (!Number.isFinite(num)) return null;
-
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
+  return new Intl.NumberFormat("vi-VN", {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 2, // always 2 decimals
   }).format(num);
 }
 
