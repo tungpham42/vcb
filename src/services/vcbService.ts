@@ -19,8 +19,15 @@ export function parseNumberSafe(value: any): number | null {
 
 export function parseNumberSafeVN(value: any): number | null {
   if (value === null || value === undefined || value === "") return null;
-  const cleaned = String(value).trim().replace(/,/g, "").replace(/\./g, ",");
-  const parsed = Number(cleaned);
+
+  const str = String(value).trim();
+
+  // Remove thousand separators (commas)
+  const noThousand = str.replace(/,/g, "");
+
+  // Parse normally (JS expects dot as decimal separator)
+  const parsed = Number(noThousand);
+
   return Number.isFinite(parsed) ? parsed : null;
 }
 
