@@ -18,58 +18,12 @@ export function parseNumberSafe(value: any): number | null {
 }
 
 export function formatNumber(value: string | number | null): string | null {
-  if (value === null || value === undefined) return null;
-
-  let num: number;
-
-  if (typeof value === "number") {
-    if (!Number.isFinite(value)) return null;
-    num = value;
-  } else {
-    let s = value.trim();
-
-    // Remove currency symbols/letters/spaces but keep digits, dot, comma, minus
-    s = s.replace(/[^\d.,-]/g, "");
-
-    if (!s || s === "-" || s === "." || s === ",") return null;
-
-    const lastDot = s.lastIndexOf(".");
-    const lastComma = s.lastIndexOf(",");
-
-    if (lastDot !== -1 && lastComma !== -1) {
-      // both present -> the later one is the decimal separator
-      if (lastComma > lastDot) {
-        // comma is decimal: remove dots (thousands) and convert comma -> dot
-        s = s.replace(/\./g, "").replace(",", ".");
-      } else {
-        // dot is decimal: remove commas (thousands)
-        s = s.replace(/,/g, "");
-      }
-    } else if (lastComma !== -1) {
-      const decimals = s.length - lastComma - 1;
-      if (decimals <= 2) {
-        s = s.replace(",", ".");
-      } else {
-        s = s.replace(/,/g, "");
-      }
-    } else if (lastDot !== -1) {
-      const decimals = s.length - lastDot - 1;
-      if (decimals <= 2) {
-        // dot is decimal, leave it
-      } else {
-        s = s.replace(/\./g, "");
-      }
-    }
-
-    const parsed = Number(s);
-    if (!Number.isFinite(parsed)) return null;
-    num = parsed;
-  }
+  if (value === null || value === undefined || value === "") return null;
+  const num = parseFloat(String(value).replace(/\./g, "").replace(",", "."));
 
   // Format with grouping (dot) + decimal comma
-  return new Intl.NumberFormat("de-DE", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
   }).format(num);
 }
 
