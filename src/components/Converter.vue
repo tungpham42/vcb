@@ -68,8 +68,8 @@ import {
 } from "../services/vcbService";
 
 const amount = ref<number | null>(1);
-const from = ref("VND");
-const to = ref("USD");
+const from = ref("USD");
+const to = ref("VND");
 const rateMode = ref<"transfer" | "buy" | "sell">("transfer");
 
 const rates = ref<VcbRate[]>([]);
